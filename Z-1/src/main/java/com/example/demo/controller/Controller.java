@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 public class Controller {
@@ -14,38 +15,33 @@ public class Controller {
     private Repository repository;
 
     @PostMapping("/adddog")
-    public Dog addDog(
+    public Optional<Dog> addDog(
             @RequestParam String breed,
             @RequestParam int age) {
-        Dog dog = new Dog(breed, age);
-        repository.createDog(dog.breed, dog.age);
-        return dog;
+        return repository.createDog(breed, age);
     }
 
     @GetMapping("/getall")
-    public List<String> getAll() {
+    public List<Dog> getAll() {
         return repository.findAll();
     }
 
     @GetMapping("/get/{id}")
-    public Dog getDog(
+    public Optional<Dog> getDog(
         @PathVariable("id") long id) {
-        String dogFromBD = repository.findById(id);
-        String[] spliter = dogFromBD.split(" ");
-        return new Dog(spliter[0], Integer.parseInt(spliter[1]));
+        return repository.findById(id);
     }
 
     @PutMapping("/put/{id}")
-    public Dog updateDog(
+    public Optional<Dog> updateDog(
             @PathVariable("id") long id,
             @RequestParam String breed,
             @RequestParam int age) {
-        String dogFromDB = repository.findById(id);
-        String[] spliter = dogFromDB.split(" ");
-        Dog dog = new Dog(spliter[0], Integer.parseInt(spliter[1]));
-        dog.setBreed(breed);
-        dog.setAge(age);
-        repository.update(id, dog.breed, dog.age);
-        return dog;
+        return repository.update(id, breed, age);
+    }
+
+    @DeleteMapping("/delete/{id}")
+    public void delete(@PathVariable("id") long id) {
+        repository.delete(id);
     }
 }
