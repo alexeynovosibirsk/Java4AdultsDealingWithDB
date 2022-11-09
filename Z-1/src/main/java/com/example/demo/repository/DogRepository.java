@@ -17,6 +17,5 @@ public interface DogRepository {
     public Optional<Dog> updateDog(long id, String breed, int age);
 
     public void deleteDog(long id);
-
-
 }
+

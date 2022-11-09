@@ -1,19 +1,17 @@
 package com.example.demo.repository;
 
 import com.example.demo.entity.Dog;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
-import org.springframework.context.annotation.Configuration;
+import org.springframework.stereotype.Service;
 
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-@Configuration
-@Slf4j
-public class Repository {
+@Service
+public class DogService implements DogRepository {
 
     @Autowired
     Dog dog;
@@ -27,7 +25,8 @@ public class Repository {
     private PreparedStatement statement;
     private ResultSet resultSet;
 
-    public Optional<Dog> createDog(String breed, int age) {
+    @Override
+    public Optional<Dog> saveDog(String breed, int age) {
         Connection connection = null;
         Optional<Dog> dogOptional = Optional.empty();
 
@@ -46,7 +45,7 @@ public class Repository {
                 ));
                 if (rowsInserted > 0) {
                     Dog d = dogOptional.get();
-                    log.info("Insert completed: id={}, breed={}, age={}" + d.id, d.breed, d.age);
+
                 }
             }
         } catch (SQLException e) {
@@ -60,6 +59,7 @@ public class Repository {
         }
         return dogOptional;
     }
+    @Override
     public List<Dog> findAll() {
         List<Dog> result = new ArrayList<>();
 
@@ -80,6 +80,7 @@ public class Repository {
         return result;
     }
 
+    @Override
     public Optional<Dog> findById(long id) {
         Optional<Dog> dog = Optional.empty();
 
@@ -98,9 +99,8 @@ public class Repository {
             }
         return dog;
     }
-
-    public Optional<Dog> update(long id, String breed, int age) {
-        List<Dog> result = findAll(); //читаем все из базы
+    @Override
+    public Optional<Dog> updateDog(long id, String breed, int age) {
         Optional<Dog> dog = Optional.empty();
 
         try (Connection conn = DriverManager.getConnection(urlDB, user, password)) {
@@ -110,27 +110,19 @@ public class Repository {
             statement.setLong(3, id); // Здесь указывается не номер столбца, а номер переменной в запросе!
             int rowsUpdated = statement.executeUpdate();
             if (rowsUpdated > 0) {
-                for(Dog d : result) {
-                    if(d.id == id) {
-                        d.setBreed(breed);
-                        d.setAge(age);
-                        dog = Optional.of(d);
-                    }
-                }
-                System.out.println("Update completed!");
+                        dog = Optional.of(new Dog(id, breed, age));
             }
         } catch (SQLException ex) {
             ex.printStackTrace();
         }
         return dog;
     }
-
-    public void delete(long id) {
+    @Override
+    public void deleteDog(long id) {
         try(Connection conn = DriverManager.getConnection(urlDB, user, password)) {
             statement = conn.prepareStatement("DELETE FROM myschema.dog WHERE id=?");
             statement.setLong(1, id);
             statement.executeUpdate();
-            log.info("Row with id={} Deleted ", id);
         } catch (SQLException e) {
             e.printStackTrace();
         }
